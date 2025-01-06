@@ -1,8 +1,6 @@
 [submodule "melp"]
 	path = melp
 	url = https://github.com/PacktPublishing/Mastering-Embedded-Linux-Programming-Third-Edition.git
-	branch = master
 [submodule "crosstool-ng"]
 	path = crosstool-ng
 	url = https://github.com/crosstool-ng/crosstool-ng.git
-	tag = crosstool-ng-1.24.0
