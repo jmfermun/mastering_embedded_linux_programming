@@ -16,3 +16,9 @@ Notes:
     1. Pres Y over ```Allow building as root user (READ HELP!) (NEW)```.
     1. Pres Y over ```Are you sure? (NEW)```.
     1. Save the configuration.
+- Steps needed to enable git long paths:
+    1. Open git bash.
+    1. Execute ```git config --global core.longpaths true```.
+- Steps needed to configure Git Large File Storage:
+    1. Open git bash.
+    1. Execute ```git lfs track "*.tar.gz"```.
