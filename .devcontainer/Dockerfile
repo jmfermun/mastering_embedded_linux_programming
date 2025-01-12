@@ -1,5 +1,5 @@
 # Pull base image. 
-FROM ubuntu:20.04
+FROM ubuntu:latest
 
 # Update the base image.
 RUN apt-get update && apt-get upgrade -y
@@ -42,3 +42,23 @@ RUN apt-get install -y \
     unzip \
     wget \
     xz-utils
+
+# Create non root user.
+ARG USERNAME=user-docker
+ARG USER_UID=1001
+ARG USER_GID=$USER_UID
+
+RUN groupadd --gid $USER_GID $USERNAME \
+    && useradd --uid $USER_UID --gid $USER_GID -m $USERNAME \
+    #
+    # [Optional] Add sudo support. Omit if you don't need to install software after connecting.
+    && apt-get update \
+    && apt-get install -y sudo \
+    && echo $USERNAME ALL=\(root\) NOPASSWD:ALL > /etc/sudoers.d/$USERNAME \
+    && chmod 0440 /etc/sudoers.d/$USERNAME
+
+# Set the default user. Omit if you want to keep the default as root.
+USER $USERNAME
+
+# Default command to be executed.
+CMD ["/bin/bash"]

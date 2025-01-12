@@ -7,7 +7,7 @@ git submodule update --init --force --remote
 
 # Checkout the correct release of crosstool-NG.
 cd crosstool-ng
-git checkout crosstool-ng-1.24.0
+git checkout crosstool-ng-1.26.0
 
 # Checkout the correct branch of Mastering Embedded Linux Programming Third Edition.
 cd ../melp

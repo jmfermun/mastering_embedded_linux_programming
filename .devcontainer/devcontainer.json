@@ -21,5 +21,8 @@
                 "ms-vscode.makefile-tools"
 			]
 		}
-	}
+	},
+
+	// Change /workspaces folder owner to user-docker.
+	"postAttachCommand": "sudo chown -R user-docker /workspaces"
 }
