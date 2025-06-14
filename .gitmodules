@@ -1,0 +1,9 @@
+[submodule "melp"]
+	path = melp
+	url = https://github.com/PacktPublishing/Mastering-Embedded-Linux-Programming-Third-Edition.git
+[submodule "crosstool-ng"]
+	path = crosstool-ng
+	url = https://github.com/crosstool-ng/crosstool-ng.git
+[submodule "u-boot"]
+	path = u-boot
+	url = https://source.denx.de/u-boot/u-boot.git
