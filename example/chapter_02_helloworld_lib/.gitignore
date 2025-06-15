@@ -1,0 +1,6 @@
+test1.o
+test2.o
+libtest.a
+libtest.so
+helloworld
+helloworld-static
