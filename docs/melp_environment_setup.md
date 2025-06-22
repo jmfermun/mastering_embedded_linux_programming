@@ -8,6 +8,11 @@
   - [WSL](#wsl)
 - [Repository](#repository)
 - [Crostool-ng toolchains](#crostool-ng-toolchains)
+- [U-Boot images](#u-boot-images)
+- [Miscellaneous](#miscellaneous)
+  - [SD card format](#sd-card-format)
+  - [Attach SD card to WSL](#attach-sd-card-to-wsl)
+  - [Open BeagleBone Black serial port](#open-beaglebone-black-serial-port)
 
 # Environment Setup
 
@@ -60,7 +65,8 @@
     sudo apt update && sudo apt upgrade
     sudo apt-get install autoconf automake bison bzip2 cmake \
     flex g++ gawk gcc gettext git gperf help2man libncurses5-dev libstdc++6 libtool \
-    libtool-bin make patch python3-dev rsync texinfo unzip wget xz-utils pkg-config
+    libtool-bin make patch python3-dev rsync texinfo unzip wget xz-utils pkg-config \
+    libssl-dev libgnutls28-dev gtkterm
     git config --global user.name "Juan Manuel Fernández Muñoz"
     git config --global user.email "jmfermun@gmail.com"
     git config --global color.ui auto
@@ -70,6 +76,7 @@
     ```
     git config --global credential.helper wincred
     ```
+- Download and install [usbipd-win](https://github.com/dorssel/usbipd-win/releases).
 
 Notes:
 - To uninstall a distribution, open PowerShell and execute:
@@ -153,4 +160,85 @@ arm-unknown-linux-gnueabi-gcc -v
 arm-unknown-linux-gnueabi-gcc --target-help
 arm-unknown-linux-gnueabi-gcc -print-sysroot
 ls -la ~/x-tools/arm-unknown-linux-gnueabi/arm-unknown-linux-gnueabi/sysroot
+```
+
+# U-Boot images
+
+Compile U-Boot and copy it in a SD card.
+```
+# Build U-Boot for BeagleBone Black
+cd ~/development/repositories/mastering_embedded_linux_programming/u-boot
+source ../melp/Chapter02/set-path-arm-cortex_a8-linux-gnueabihf
+make distclean
+make am335x_evm_defconfig
+make
+
+# Identify the SD card name, for example, "sde"
+lsblk
+
+# Mount the SD card boot partition
+sudo mkdir -p /media/jmfermun/boot
+sudo mount /dev/sde1 /media/jmfermun/boot
+
+# Copy U-Boot in the SD card boot partition
+sudo cp MLO /media/jmfermun/boot
+sudo cp u-boot.img /media/jmfermun/boot
+
+# Unmount the SD card boot partition
+sudo umount /media/jmfermun/boot
+```
+
+Launch U-Boot in BeagleBone Black:
+- Turn off BeagleBone Black.
+- Insert SD card.
+- Connect USB to serial converter to [serial header pins](https://docs.beagleboard.org/boards/beaglebone/black/ch07.html#id12).
+- Follow instructions in [Open BeagleBone Black serial port](#open-beaglebone-black-serial-port).
+- Press (and maintain pressed) S2 button.
+- Turn on BeagleBone Black.
+- Wait 5 secods.
+- U-Boot output should be available in the serial port terminal.
+
+# Miscellaneous
+
+## SD card format
+
+Use MiniTool Partition Wizard in Windows to format the SD card:
+- Partition 1: FAT32, 64 MiB, set as active (bootable).
+- Partition2: ext4, 1 GiB.
+
+## Attach SD card to WSL
+
+Open PowerShell as administrator:
+```
+# Identify the "USB storage device" bus ID, for example, "1-2"
+usbipd list
+
+# Attach SD card to WSL
+usbipd bind --busid 1-2
+usbipd attach --wsl --busid 1-2
+
+# Detach SD card from WSL
+usbipd detach --busid 1-2
+```
+
+## Open BeagleBone Black serial port
+
+Open PowerShell as administrator:
+```
+# Identify the "USB serial device (COMX)" bus ID, for example, "1-2"
+usbipd list
+
+# Attach BeagleBone Black to WSL
+usbipd bind --busid 1-2
+usbipd attach --wsl --busid 1-2
+
+# Detach BeagleBone Black from WSL (after you finish the work)
+usbipd detach --busid 1-2
+```
+
+Open WSL:
+```
+# Open the BeagleBone Black serial port
+ls /dev
+gtkterm -p /dev/ttyUSB0 -s 115200
 ```
