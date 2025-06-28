@@ -24,3 +24,7 @@ git checkout v2025.04
 # Checkout the correct branch of Linux.
 cd ../linux-stable
 git checkout v6.15.4
+
+# Checkout the correct branch of Raspberry Pi Linux fork.
+cd ../rpi-linux
+git checkout rpi-6.12.y

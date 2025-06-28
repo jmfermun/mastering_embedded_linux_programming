@@ -10,3 +10,6 @@
 [submodule "linux-stable"]
 	path = linux-stable
 	url = git://git.kernel.org/pub/scm/linux/kernel/git/stable/linux-stable.git
+[submodule "rpi-linux"]
+	path = rpi-linux
+	url = https://github.com/raspberrypi/linux.git
