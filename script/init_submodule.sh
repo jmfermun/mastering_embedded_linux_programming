@@ -20,3 +20,7 @@ git checkout master
 # Checkout the correct branch of U-Boot.
 cd ../u-boot
 git checkout v2025.04
+
+# Checkout the correct branch of Linux.
+cd ../linux-stable
+git checkout v6.15.4

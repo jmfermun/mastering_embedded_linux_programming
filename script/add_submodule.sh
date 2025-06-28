@@ -10,3 +10,4 @@ cd "$(dirname "$0")"/..
 git submodule add https://github.com/PacktPublishing/Mastering-Embedded-Linux-Programming-Third-Edition.git melp
 git submodule add https://github.com/crosstool-ng/crosstool-ng.git crosstool-ng
 git submodule add https://source.denx.de/u-boot/u-boot.git u-boot
+git submodule add git://git.kernel.org/pub/scm/linux/kernel/git/stable/linux-stable.git linux-stable
