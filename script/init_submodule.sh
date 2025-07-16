@@ -28,3 +28,7 @@ git checkout v6.15.4
 # Checkout the correct branch of Raspberry Pi Linux fork.
 cd ../rpi-linux
 git checkout rpi-6.12.y
+
+# Checkout the correct branch of BusyBox.
+cd ../busybox
+git checkout 1_36_1

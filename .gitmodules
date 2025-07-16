@@ -17,3 +17,6 @@
 	path = rpi-firmware
 	url = https://github.com/raspberrypi/firmware.git
 	shallow = true
+[submodule "busybox"]
+	path = busybox
+	url = git://busybox.net/busybox.git
