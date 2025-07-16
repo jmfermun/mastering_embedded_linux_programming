@@ -69,7 +69,7 @@
     sudo apt-get install autoconf automake bison bzip2 cmake \
     flex g++ gawk gcc gettext git gperf help2man libncurses5-dev libstdc++6 libtool \
     libtool-bin make patch python3-dev rsync texinfo unzip wget xz-utils pkg-config \
-    libssl-dev libgnutls28-dev gtkterm subversion
+    libssl-dev libgnutls28-dev gtkterm subversion qemu-system-arm
     git config --global user.name "Juan Manuel Fernández Muñoz"
     git config --global user.email "jmfermun@gmail.com"
     git config --global color.ui auto
@@ -212,21 +212,22 @@ cd ~/development/repositories/mastering_embedded_linux_programming/linux-stable
 PATH=~/x-tools/arm-cortex_a8-linux-gnueabihf/bin:$PATH
 export CROSS_COMPILE=arm-cortex_a8-linux-gnueabihf-
 export ARCH=arm
-make mrproper
-make multi_v7_defconfig
-make -j 4 zImage
-make -j 4 modules
-make dtbs
+make O=./build/bbb mrproper
+make O=./build/bbb multi_v7_defconfig
+make O=./build/bbb -j 4 zImage
+make O=./build/bbb -j 4 modules
+make O=./build/bbb dtbs
 
 # Build Linux kernel for QEMU
 cd ~/development/repositories/mastering_embedded_linux_programming/linux-stable
 PATH=~/x-tools/arm-unknown-linux-gnueabi/bin:$PATH
 export CROSS_COMPILE=arm-unknown-linux-gnueabi-
 export ARCH=arm
-make mrproper
-make -j 4 zImage
-make -j 4 modules
-make dtbs
+make O=./build/qemu mrproper
+make O=./build/qemu versatile_defconfig
+make O=./build/qemu -j 4 zImage
+make O=./build/qemu -j 4 modules
+make O=./build/qemu dtbs
 
 # Build Linux kernel for Raspberry Pi 4
 cd ~/development/repositories/mastering_embedded_linux_programming/rpi-linux
@@ -270,8 +271,8 @@ sudo mount /dev/sde1 /media/jmfermun/boot
 # BeagleBone Black artifacts
 sudo cp u-boot/MLO /media/jmfermun/boot/
 sudo cp u-boot/u-boot.img /media/jmfermun/boot/
-sudo cp linux-stable/arch/arm/boot/zImage /media/jmfermun/boot/
-sudo cp linux-stable/arch/arm/boot/dts/ti/omap/am335x-boneblack.dtb /media/jmfermun/boot/
+sudo cp linux-stable/build/bbb/arch/arm/boot/zImage /media/jmfermun/boot/
+sudo cp linux-stable/build/bbb/arch/arm/boot/dts/ti/omap/am335x-boneblack.dtb /media/jmfermun/boot/
 
 # Raspberry Pi 4 artifacts
 sudo cp -r rpi-firmware/boot/* /media/jmfermun/boot/
@@ -308,6 +309,20 @@ Launch Linux in Raspberry Pi 4:
 - Follow instructions in [Open serial port](#open-serial-port).
 - Turn on Raspberry Pi 4.
 - Linux output should be available in the serial port terminal.
+
+Launch Linux in QEMU:
+- Execute the following commands:
+```
+cd ~/development/repositories/mastering_embedded_linux_programming
+export QEMU_AUDIO_DRV=none
+qemu-system-arm \
+    -m 256M \
+    -nographic \
+    -M versatilepb \
+    -kernel linux-stable/build/qemu/arch/arm/boot/zImage \
+    -append "console=ttyAMA0,115200" \
+    -dtb linux-stable/build/qemu/arch/arm/boot/dts/arm/versatile-pb.dtb
+```
 
 # Miscellaneous
 
