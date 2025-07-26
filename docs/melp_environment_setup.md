@@ -10,6 +10,7 @@
 - [Toolchain](#toolchain)
 - [U-Boot](#u-boot)
 - [Linux kernel](#linux-kernel)
+- [Root filesystem](#root-filesystem)
 - [Copy artifacts in SD card](#copy-artifacts-in-sd-card)
 - [Launch](#launch)
 - [Miscellaneous](#miscellaneous)
@@ -44,6 +45,11 @@
 
 ## WSL
 
+- In Windows, go to %USERPROFILE% and create the file .wslconfig with the following contents:
+    ```
+    [wsl2]
+    networkingMode=mirrored
+    ```
 - Open PowerShell and execute:
     ```
     wsl --install -d Ubuntu-24.04
@@ -62,6 +68,7 @@
 - Open PowerShell and execute:
     ```
     wsl --shutdown
+    Set-NetFirewallHyperVVMSetting -Name '{40E0AC32-46A5-438A-A0B2-2B479E8F2E90}' -DefaultInboundAction Allow
     ```
 - Open WSL and execute:
     ```
@@ -69,7 +76,8 @@
     sudo apt-get install autoconf automake bison bzip2 cmake \
     flex g++ gawk gcc gettext git gperf help2man libncurses5-dev libstdc++6 libtool \
     libtool-bin make patch python3-dev rsync texinfo unzip wget xz-utils pkg-config \
-    libssl-dev libgnutls28-dev gtkterm subversion qemu-system-arm
+    libssl-dev libgnutls28-dev gtkterm subversion qemu-system-arm cpio genext2fs dosfstools \
+    nfs-kernel-server tftpd-hpa uml-utilities
     git config --global user.name "Juan Manuel Fernández Muñoz"
     git config --global user.email "jmfermun@gmail.com"
     git config --global color.ui auto
@@ -197,9 +205,14 @@ To build U-Boot, open WSL and execute:
 ```
 # Build U-Boot for BeagleBone Black
 cd ~/development/repositories/mastering_embedded_linux_programming/u-boot
-source ../melp/Chapter02/set-path-arm-cortex_a8-linux-gnueabihf
+PATH=~/x-tools/arm-cortex_a8-linux-gnueabihf/bin:$PATH
+export CROSS_COMPILE=arm-cortex_a8-linux-gnueabihf-
+export ARCH=arm
 make distclean
 make am335x_evm_defconfig
+make menuconfig
+# Boot options -> Boot images -> Enable support for the legacy image format -> <Y> includes
+# Save and exit
 make
 ```
 
@@ -214,6 +227,9 @@ export CROSS_COMPILE=arm-cortex_a8-linux-gnueabihf-
 export ARCH=arm
 make O=./build/bbb mrproper
 make O=./build/bbb multi_v7_defconfig
+make O=./build/bbb menuconfig
+# Device drivers -> Generic driver options -> Support for uevent helper -> <Y> includes
+# File systems -> Second extended fs support (DEPRECATED) -> <Y> includes
 make O=./build/bbb -j 4 zImage
 make O=./build/bbb -j 4 modules
 make O=./build/bbb dtbs
@@ -225,6 +241,9 @@ export CROSS_COMPILE=arm-unknown-linux-gnueabi-
 export ARCH=arm
 make O=./build/qemu mrproper
 make O=./build/qemu versatile_defconfig
+make O=./build/qemu menuconfig
+# Device drivers -> Generic driver options -> Maintain a devtmpfs filesystem to mount at /dev -> <Y> includes
+# Device drivers -> Generic driver options -> Support for uevent helper -> <Y> includes
 make O=./build/qemu -j 4 zImage
 make O=./build/qemu -j 4 modules
 make O=./build/qemu dtbs
@@ -256,29 +275,142 @@ console=serial0,115200 console=tty1 root=/dev/mmcblk0p2 rootwait
 EOF
 ```
 
+# Root filesystem
+
+Open WSL and execute:
+```
+# Create the staging directories for BeagleBone Black
+cd ~/development/repositories/mastering_embedded_linux_programming
+mkdir staging_dir/bbb
+cd staging_dir/bbb
+mkdir -p bin dev etc home lib proc sbin sys tmp usr var root
+mkdir -p usr/bin usr/lib usr/sbin
+mkdir -p var/log
+
+# Create the staging directories for QEMU
+cd ~/development/repositories/mastering_embedded_linux_programming
+mkdir staging_dir/qemu
+cd staging_dir/qemu
+mkdir -p bin dev etc home lib proc sbin sys tmp usr var root
+mkdir -p usr/bin usr/lib usr/sbin
+mkdir -p var/log
+
+# Build BusyBox for BeagleBone Black
+cd ~/development/repositories/mastering_embedded_linux_programming/busybox
+PATH=~/x-tools/arm-cortex_a8-linux-gnueabihf/bin:$PATH
+export CROSS_COMPILE=arm-cortex_a8-linux-gnueabihf-
+export ARCH=arm
+make distclean
+make defconfig
+make menuconfig
+# Settings -> Installation Options ("make install" behavior) -> (*) Destination path for 'make install' -> ../staging_dir/bbb
+# Neworking Utilities -> tc -> <N> excludes
+# Save and exit
+make
+make install
+
+# Build BusyBox for QEMU
+cd ~/development/repositories/mastering_embedded_linux_programming/busybox
+PATH=~/x-tools/arm-unknown-linux-gnueabi/bin:$PATH
+export CROSS_COMPILE=arm-unknown-linux-gnueabi-
+export ARCH=arm
+make distclean
+make defconfig
+make menuconfig
+# Settings -> Installation Options ("make install" behavior) -> (*) Destination path for 'make install' -> ../staging_dir/qemu
+# Neworking Utilities -> tc -> <N> excludes
+# Save and exit
+make
+make install
+
+# Copy toolchain libraries for BeagleBone Black
+cd ~/development/repositories/mastering_embedded_linux_programming/staging_dir/bbb
+PATH=~/x-tools/arm-cortex_a8-linux-gnueabihf/bin:$PATH
+export SYSROOT=$(arm-cortex_a8-linux-gnueabihf-gcc -print-sysroot)
+cp -a $SYSROOT/lib/* ./lib/
+
+# Copy toolchain libraries for QEMU
+cd ~/development/repositories/mastering_embedded_linux_programming/staging_dir/qemu
+PATH=~/x-tools/arm-unknown-linux-gnueabi/bin:$PATH
+export SYSROOT=$(arm-unknown-linux-gnueabi-gcc -print-sysroot)
+cp -a $SYSROOT/lib/* ./lib/
+
+# Create device nodes for BeagleBone Black
+cd ~/development/repositories/mastering_embedded_linux_programming/staging_dir/bbb
+sudo mknod -m 666 dev/null c 1 3
+sudo mknod -m 600 dev/console c 5 1
+ls -l dev
+
+# Create device nodes for QEMU
+cd ~/development/repositories/mastering_embedded_linux_programming/staging_dir/qemu
+sudo mknod -m 666 dev/null c 1 3
+sudo mknod -m 600 dev/console c 5 1
+ls -l dev
+
+# Copy scripts for BeagleBone Black
+cd ~/development/repositories/mastering_embedded_linux_programming/staging_dir/bbb
+cp -r ../../script/files/etc/. etc/
+chmod +x etc/init.d/rcS
+chmod 0600 etc/shadow
+
+# Copy scripts for QEMU
+cd ~/development/repositories/mastering_embedded_linux_programming/staging_dir/qemu
+cp -r ../../script/files/etc/. etc/
+chmod +x etc/init.d/rcS
+chmod 0600 etc/shadow
+
+# Change ownership for BeagleBone Black
+cd ~/development/repositories/mastering_embedded_linux_programming/staging_dir/bbb
+sudo chown -R 0:0
+
+# Create initramfs for BeagleBone Black
+PATH=~/development/repositories/mastering_embedded_linux_programming/u-boot/tools:$PATH
+cd ~/development/repositories/mastering_embedded_linux_programming/staging_dir/bbb
+mkdir -p ../../deploy/bbb
+find . | cpio -H newc -ov --owner root:root > ../../deploy/bbb/initramfs.cpio
+cd ../../deploy/bbb
+gzip initramfs.cpio
+mkimage -A arm -O linux -T ramdisk -d initramfs.cpio.gz uRamdisk
+
+# Create initramfs for QEMU
+cd ~/development/repositories/mastering_embedded_linux_programming/staging_dir/qemu
+mkdir -p ../../deploy/qemu
+find . | cpio -H newc -ov --owner root:root > ../../deploy/qemu/initramfs.cpio
+cd ../../deploy/qemu
+gzip initramfs.cpio
+
+# Create ext2 image for BeagleBone Black
+cd ~/development/repositories/mastering_embedded_linux_programming/staging_dir/bbb
+genext2fs -b 102400 -d . -D ../device-table.txt -U ../../deploy/bbb/rootfs.ext2
+```
+
 # Copy artifacts in SD card
 
 ```
 cd ~/development/repositories/mastering_embedded_linux_programming
 
-# Identify the SD card name, for example, "sde"
+# Identify the SD card name, for example, "sdf"
 lsblk
 
 # Mount the SD card boot partition
 sudo mkdir -p /media/jmfermun/boot
-sudo mount /dev/sde1 /media/jmfermun/boot
+sudo mount /dev/sdf1 /media/jmfermun/boot
 
 # BeagleBone Black artifacts
 sudo cp u-boot/MLO /media/jmfermun/boot/
 sudo cp u-boot/u-boot.img /media/jmfermun/boot/
 sudo cp linux-stable/build/bbb/arch/arm/boot/zImage /media/jmfermun/boot/
 sudo cp linux-stable/build/bbb/arch/arm/boot/dts/ti/omap/am335x-boneblack.dtb /media/jmfermun/boot/
+sudo cp deploy/bbb/uRamdisk /media/jmfermun/boot/
 
 # Raspberry Pi 4 artifacts
 sudo cp -r rpi-firmware/boot/* /media/jmfermun/boot/
 
 # Unmount the SD card boot partition
 sudo umount /media/jmfermun/boot
+
+# Copy ext2 root filesystem image in the SD card second partition for BeagleBone Black
+sudo dd if=deploy/bbb/rootfs.ext2 of=/dev/sdf2
 ```
 
 # Launch
@@ -292,12 +424,58 @@ Launch U-Boot + Linux in BeagleBone Black:
 - Turn on BeagleBone Black.
 - U-Boot output should be available in the serial port terminal.
 - Press any key to stop autoboot.
-- Execute the following commands in the U-Boot prompt:
+- Execute the following commands in the U-Boot prompt to launch the initramfs:
     ```
     fatls mmc 0:1
     fatload mmc 0:1 0x80200000 zImage
     fatload mmc 0:1 0x80f00000 am335x-boneblack.dtb
-    setenv bootargs console=ttyO0,115200
+    fatload mmc 0:1 0x81000000 uRamdisk
+    setenv bootargs console=ttyO0,115200 rdinit=/sbin/init
+    bootz 0x80200000 0x81000000 0x80f00000
+    ```
+- Execute the following commands in the U-Boot prompt to launch the SD card image:
+    ```
+    fatls mmc 0:1
+    fatload mmc 0:1 0x80200000 zImage
+    fatload mmc 0:1 0x80f00000 am335x-boneblack.dtb
+    setenv bootargs console=ttyO0,115200 root=/dev/mmcblk0p2 rootfstype=ext2 init=/sbin/init rootwait
+    bootz 0x80200000 - 0x80f00000
+    ```
+- NFS:
+    ```
+    # [WSL]
+    # Add the following line to /etc/exports:
+    # /home/jmfermun/development/repositories/mastering_embedded_linux_programming/staging_dir/bbb *(rw,sync,no_subtree_check,no_root_squash)
+    sudo systemctl restart nfs-server
+
+    # [U-Boot]
+    setenv serverip 192.168.100.1
+    setenv ipaddr 192.168.100.101
+    setenv npath /home/jmfermun/development/repositories/mastering_embedded_linux_programming/staging_dir/bbb
+    setenv bootargs console=ttyO0,115200 root=/dev/nfs rw nfsroot=${serverip}:${npath},v3,nolock ip=${ipaddr}
+    fatload mmc 0:1 0x80200000 zImage
+    fatload mmc 0:1 0x80f00000 am335x-boneblack.dtb
+    bootz 0x80200000 - 0x80f00000
+    ```
+- TFTP:
+    ```
+    # [WSL]
+    # Add the following line to /etc/exports:
+    # /home/jmfermun/development/repositories/mastering_embedded_linux_programming/staging_dir/bbb *(rw,sync,no_subtree_check,no_root_squash)
+    sudo systemctl restart nfs-server
+
+    # Copy images to TFTP shared folder
+    cd ~/development/repositories/mastering_embedded_linux_programming
+    sudo cp linux-stable/build/bbb/arch/arm/boot/zImage /srv/tftp/
+    sudo cp linux-stable/build/bbb/arch/arm/boot/dts/ti/omap/am335x-boneblack.dtb /srv/tftp/
+
+    # [U-Boot]
+    setenv serverip 192.168.100.1
+    setenv ipaddr 192.168.100.101
+    tftpboot 0x80200000 zImage
+    tftpboot 0x80f00000 am335x-boneblack.dtb
+    setenv npath /home/jmfermun/development/repositories/mastering_embedded_linux_programming/staging_dir/bbb
+    setenv bootargs console=ttyO0,115200 root=/dev/nfs rw nfsroot=${serverip}:${npath},v3,nolock ip=${ipaddr}
     bootz 0x80200000 - 0x80f00000
     ```
 - Linux output should be available in the serial port terminal.
@@ -312,17 +490,52 @@ Launch Linux in Raspberry Pi 4:
 
 Launch Linux in QEMU:
 - Execute the following commands:
-```
-cd ~/development/repositories/mastering_embedded_linux_programming
-export QEMU_AUDIO_DRV=none
-qemu-system-arm \
-    -m 256M \
-    -nographic \
-    -M versatilepb \
-    -kernel linux-stable/build/qemu/arch/arm/boot/zImage \
-    -append "console=ttyAMA0,115200" \
-    -dtb linux-stable/build/qemu/arch/arm/boot/dts/arm/versatile-pb.dtb
-```
+    ```
+    cd ~/development/repositories/mastering_embedded_linux_programming
+    export QEMU_AUDIO_DRV=none
+    qemu-system-arm \
+        -m 256M \
+        -nographic \
+        -M versatilepb \
+        -kernel linux-stable/build/qemu/arch/arm/boot/zImage \
+        -append "console=ttyAMA0,115200 rdinit=/sbin/init" \
+        -dtb linux-stable/build/qemu/arch/arm/boot/dts/arm/versatile-pb.dtb \
+        -initrd deploy/qemu/initramfs.cpio.gz
+    ```
+- NFS:
+    ```
+    # Add the following line to /etc/exports:
+    # /home/jmfermun/development/repositories/mastering_embedded_linux_programming/staging_dir/qemu *(rw,sync,no_subtree_check,no_root_squash)
+    sudo systemctl restart nfs-server
+
+    cd ~/development/repositories/mastering_embedded_linux_programming
+
+    ROOT_DIR=/home/jmfermun/development/repositories/mastering_embedded_linux_programming/staging_dir/qemu
+    HOST_IP=192.168.100.2
+    TARGET_IP=192.168.100.101
+    NET_NUMBER=192.168.100.0
+    NET_MASK_CIDR=24
+
+    # Create tap0 interface, assign to it an IP, set it up, and create a route
+    sudo tunctl -u $(whoami) -t tap0
+    sudo ip addr add ${HOST_IP}/${NET_MASK_CIDR} dev tap0
+    sudo ip link set tap0 up
+    sudo ip route add ${NET_NUMBER}/${NET_MASK_CIDR} dev tap0
+
+    # Allow to pass network traffic from one interface to another
+    sudo sysctl -w net.ipv4.ip_forward=1
+
+    export QEMU_AUDIO_DRV=none
+    qemu-system-arm \
+        -m 256M \
+        -nographic \
+        -M versatilepb \
+        -kernel linux-stable/build/qemu/arch/arm/boot/zImage \
+        -append "console=ttyAMA0,115200 root=/dev/nfs rw nfsroot=${HOST_IP}:${ROOT_DIR},v3 ip=${TARGET_IP}" \
+        -dtb linux-stable/build/qemu/arch/arm/boot/dts/arm/versatile-pb.dtb \
+        -net nic -net tap,ifname=tap0,script=no,downscript=no
+    ```
+- Linux output should be available in the terminal.
 
 # Miscellaneous
 
@@ -334,6 +547,12 @@ Use MiniTool Partition Wizard in Windows to format the SD card:
     - Partition2: ext4, 1 GiB.
 - Raspberry Pi 4:
     - Partition 1: FAT32, 1 GiB, set as active (bootable).
+
+If you have an SD card reader supported by WSL, execute:
+```
+cd ~/development/repositories/mastering_embedded_linux_programming
+bash melp/format-sdcard.sh sdf
+```
 
 ## Attach SD card to WSL
 
