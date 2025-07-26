@@ -15,3 +15,4 @@ git submodule add https://github.com/raspberrypi/linux.git rpi-linux
 git submodule add --depth 1 https://github.com/raspberrypi/firmware.git rpi-firmware
 git config -f .gitmodules submodule.rpi-firmware.shallow true
 git submodule add git://busybox.net/busybox.git busybox
+git submodule add git://git.buildroot.net/buildroot buildroot

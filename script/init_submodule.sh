@@ -32,3 +32,7 @@ git checkout rpi-6.12.y
 # Checkout the correct branch of BusyBox.
 cd ../busybox
 git checkout 1_36_1
+
+# Checkout the correct branch of Buildroot.
+cd ../buildroot
+git checkout 2025.02.4
