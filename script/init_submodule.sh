@@ -35,4 +35,4 @@ git checkout 1_36_1
 
 # Checkout the correct branch of Buildroot.
 cd ../buildroot
-git checkout 2025.02.4
+git checkout 2025.02.5
