@@ -17,3 +17,5 @@ git config -f .gitmodules submodule.rpi-firmware.shallow true
 git submodule add git://busybox.net/busybox.git busybox
 git submodule add git://git.buildroot.net/buildroot buildroot
 git submodule add git://git.yoctoproject.org/poky.git yocto/poky
+git submodule add git://git.openembedded.org/meta-openembedded yocto/meta-openembedded
+git submodule add git://git.yoctoproject.org/meta-raspberrypi yocto/meta-raspberrypi

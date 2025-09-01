@@ -40,3 +40,7 @@ git checkout 2025.02.5
 # Checkout the correct branch of Yocto.
 cd ../yocto/poky
 git checkout scarthgap
+cd ../../yocto/meta-openembedded
+git checkout scarthgap
+cd ../../yocto/meta-raspberrypi
+git checkout scarthgap

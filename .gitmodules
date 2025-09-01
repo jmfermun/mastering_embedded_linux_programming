@@ -26,3 +26,9 @@
 [submodule "yocto/poky"]
 	path = yocto/poky
 	url = git://git.yoctoproject.org/poky.git
+[submodule "yocto/meta-openembedded"]
+	path = yocto/meta-openembedded
+	url = git://git.openembedded.org/meta-openembedded
+[submodule "yocto/meta-raspberrypi"]
+	path = yocto/meta-raspberrypi
+	url = git://git.yoctoproject.org/meta-raspberrypi
