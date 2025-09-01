@@ -16,3 +16,4 @@ git submodule add --depth 1 https://github.com/raspberrypi/firmware.git rpi-firm
 git config -f .gitmodules submodule.rpi-firmware.shallow true
 git submodule add git://busybox.net/busybox.git busybox
 git submodule add git://git.buildroot.net/buildroot buildroot
+git submodule add git://git.yoctoproject.org/poky.git yocto/poky

@@ -67,11 +67,18 @@
 - Open WSL and execute:
     ```
     sudo apt update && sudo apt upgrade
+    # General dependencies
     sudo apt-get install autoconf automake bison bzip2 cmake \
     flex g++ gawk gcc gettext git gperf help2man libncurses5-dev libstdc++6 libtool \
     libtool-bin make patch python3-dev rsync texinfo unzip wget xz-utils pkg-config \
     libssl-dev libgnutls28-dev gtkterm subversion qemu-system-arm cpio genext2fs dosfstools \
     nfs-kernel-server tftpd-hpa uml-utilities
+    # Yocto dependencies
+    sudo apt-get install build-essential chrpath cpio debianutils diffstat file gawk gcc git iputils-ping libacl1 liblz4-tool locales python3 python3-git python3-jinja2 python3-pexpect python3-pip python3-subunit socat texinfo unzip wget xz-utils zstd
+    # Set the correct locale
+    sudo locale-gen en_US.UTF-8
+    sudo update-locale LANG=en_US.UTF-8
+    # Configure Git
     git config --global user.name "Juan Manuel Fernández Muñoz"
     git config --global user.email "jmfermun@gmail.com"
     git config --global color.ui auto

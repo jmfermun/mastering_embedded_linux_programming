@@ -5,6 +5,9 @@
   - [Build](#build)
   - [Copy artifacts in SD card](#copy-artifacts-in-sd-card)
   - [Launch](#launch)
+- [Yocto](#yocto)
+  - [Build](#build-1)
+  - [Launch](#launch-1)
 
 # Buildroot
 
@@ -74,3 +77,36 @@ Raspberry Pi 4:
 - Follow instructions in [Open serial port](melp_environment_setup.md#open-serial-port).
 - Turn on Raspberry Pi 4.
 - Linux output should be available in the serial port terminal.
+
+# Yocto
+
+## Build
+
+QEMU:
+```
+cd ~/development/repositories/mastering_embedded_linux_programming/yocto
+source poky/oe-init-build-env build-qemuarm
+# Unomment the following line in file yocto/build-qemuarm/conf/local.conf
+# MACHINE ?= "qemuarm"
+bitbake core-image-minimal
+```
+
+Nova:
+```
+cd ~/development/repositories/mastering_embedded_linux_programming/yocto
+source poky/oe-init-build-env build-nova
+bitbake-layers add-layer ../meta-nova
+bitbake-layers show-layers
+# Unomment the following line in file yocto/build-nova/conf/local.conf
+# MACHINE ?= "beaglebone-yocto"
+bitbake nova-image
+```
+
+## Launch
+
+QEMU:
+```
+cd ~/development/repositories/mastering_embedded_linux_programming/yocto
+source poky/oe-init-build-env build-qemuarm
+runqemu qemuarm nographic
+```
