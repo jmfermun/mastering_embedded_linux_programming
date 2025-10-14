@@ -36,6 +36,7 @@
     - [WSL (Microsoft)](https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-wsl).
     - [Markdown All in One (Yu Zhang)](https://marketplace.visualstudio.com/items?itemName=yzhang.markdown-all-in-one).
     - [PlantUML (jebbs)](https://marketplace.visualstudio.com/items?itemName=jebbs.plantuml).
+    - [Yocto Project BitBake](https://marketplace.visualstudio.com/items?itemName=yocto-project.yocto-bitbake).
 
 ## WSL
 
@@ -43,6 +44,7 @@
     ```
     [wsl2]
     networkingMode=mirrored
+    memory=8GB
     ```
 - Open PowerShell and execute:
     ```
@@ -72,7 +74,7 @@
     flex g++ gawk gcc gettext git gperf help2man libncurses5-dev libstdc++6 libtool \
     libtool-bin make patch python3-dev rsync texinfo unzip wget xz-utils pkg-config \
     libssl-dev libgnutls28-dev gtkterm subversion qemu-system-arm cpio genext2fs dosfstools \
-    nfs-kernel-server tftpd-hpa uml-utilities
+    nfs-kernel-server tftpd-hpa uml-utilities arp-scan
     # Yocto dependencies
     sudo apt-get install build-essential chrpath cpio debianutils diffstat file gawk gcc git iputils-ping libacl1 liblz4-tool locales python3 python3-git python3-jinja2 python3-pexpect python3-pip python3-subunit socat texinfo unzip wget xz-utils zstd
     # Set the correct locale
@@ -92,6 +94,11 @@
 - Download [Etcher](https://github.com/balena-io/etcher/releases/) debian package and install it with the command:
     ```
     sudo apt install ./balena-etcher_2.1.3_amd64.deb
+    ```
+- To update it, uninstall first the package and then install the new one:
+    ```
+    sudo apt remove balena-etcher
+    sudo apt install ./balena-etcher_2.1.4_amd64.deb
     ```
 
 Notes:

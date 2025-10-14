@@ -7,6 +7,7 @@
   - [Launch](#launch)
 - [Yocto](#yocto)
   - [Build](#build-1)
+  - [Copy artifacts in SD card](#copy-artifacts-in-sd-card-1)
   - [Launch](#launch-1)
 
 # Buildroot
@@ -95,11 +96,74 @@ Nova:
 ```
 cd ~/development/repositories/mastering_embedded_linux_programming/yocto
 source poky/oe-init-build-env build-nova
+
+# Configure layers (already done)
 bitbake-layers add-layer ../meta-nova
 bitbake-layers show-layers
 # Unomment the following line in file yocto/build-nova/conf/local.conf
 # MACHINE ?= "beaglebone-yocto"
+
+# Build the image
 bitbake nova-image
+```
+
+Raspberry Pi 4:
+```
+# Set the working environment
+cd ~/development/repositories/mastering_embedded_linux_programming/yocto
+source poky/oe-init-build-env build-rpi
+
+# Configure layers (already done)
+bitbake-layers add-layer ../meta-openembedded/meta-oe
+bitbake-layers add-layer ../meta-openembedded/meta-python
+bitbake-layers add-layer ../meta-openembedded/meta-networking
+bitbake-layers add-layer ../meta-openembedded/meta-multimedia
+bitbake-layers add-layer ../meta-raspberrypi
+bitbake-layers show-layers
+# Add the following lines in line in file yocto/build-rpi/conf/local.conf
+# MACHINE = "raspberrypi4-64"
+# DISTRO = "mackerel"
+# PACKAGE_CLASSES ?= "package_ipk"
+# EXTRA_IMAGE_FEATURES ?= "debug-tweaks ssh-server-openssh package-management"
+# # Package linux-firmware-rpidistro includes some firmware blobs under the Synaptics license
+# LICENSE_FLAGS_ACCEPTED += "synaptics-killswitch"
+
+# Create a distro (already done)
+bitbake-layers create-layer ../meta-mackerel
+bitbake-layers add-layer ../meta-mackerel
+bitbake-layers show-layers
+# Create file ~/development/repositories/mastering_embedded_linux_programming/yocto/meta-mackerel/conf/distro/
+mackerel.conf, and add the following lines in line.
+# DISTRO_NAME = "Mackerel (Mackerel Embedded Linux Distro)"
+# DISTRO_VERSION = "0.1"
+
+# Build the image
+bitbake rpi-test-image
+```
+
+## Copy artifacts in SD card
+
+Raspberry Pi 4:
+```
+cd ~/development/repositories/mastering_embedded_linux_programming
+
+# Identify the SD card name, for example, "sdf"
+lsblk
+
+# Extract the compressed image
+cp yocto/build-rpi/tmp-glibc/deploy/images/raspberrypi4-64/rpi-test-image-raspberrypi4-64.rootfs.wic.bz2 rpi-test-image.wic.bz2
+bunzip2 rpi-test-image.wic.bz2
+
+# Launch etcher
+sudo balena-etcher --no-sandbox
+# Click *Flash from file* -> Select rpi-test-image.wic
+# Click *Select target* -> /dev/sdf -> Select 1
+# Click *Flash*
+
+# Close etcher
+
+# Remove the extracted image
+rm rpi-test-image.wic
 ```
 
 ## Launch
@@ -109,4 +173,19 @@ QEMU:
 cd ~/development/repositories/mastering_embedded_linux_programming/yocto
 source poky/oe-init-build-env build-qemuarm
 runqemu qemuarm nographic
+```
+
+Raspberry Pi 4:
+- Turn off Raspberry Pi 4.
+- Insert SD card.
+- Turn on Raspberry Pi 4.
+- Connect Raspberry Pi 4 ethernet to the LAN.
+- Connect thorugh SSH to the Raspberry Pi 4.
+```
+# Search the IP of the Raspberry Pi 4
+sudo arp-scan --interface=eth3 --localnet
+# Search a line like: 192.168.1.174   d8:3a:dd:e6:29:86       Raspberry Pi Trading Ltd
+
+# Connect to the Raspberry Pi through SSH
+ssh root@192.168.1.174
 ```
